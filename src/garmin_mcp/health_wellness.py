@@ -2,6 +2,7 @@
 Health & Wellness Data functions for Garmin Connect MCP Server
 """
 import datetime
+import json
 from typing import Any, Dict, List, Optional, Union
 
 # The garmin_client will be set by the main file
@@ -29,7 +30,7 @@ def register_tools(app):
             if not stats:
                 return f"No stats found for {date}"
             
-            return stats
+            return json.dumps(stats)
         except Exception as e:
             return f"Error retrieving stats: {str(e)}"
 
@@ -45,7 +46,7 @@ def register_tools(app):
             if not summary:
                 return f"No user summary found for {date}"
             
-            return summary
+            return json.dumps(summary)
         except Exception as e:
             return f"Error retrieving user summary: {str(e)}"
 
@@ -67,7 +68,7 @@ def register_tools(app):
                 if not composition:
                     return f"No body composition data found for {start_date}"
             
-            return composition
+            return json.dumps(composition)
         except Exception as e:
             return f"Error retrieving body composition data: {str(e)}"
 
@@ -83,7 +84,7 @@ def register_tools(app):
             if not data:
                 return f"No stats and body composition data found for {date}"
             
-            return data
+            return json.dumps(data)
         except Exception as e:
             return f"Error retrieving stats and body composition data: {str(e)}"
 
@@ -99,7 +100,7 @@ def register_tools(app):
             if not steps_data:
                 return f"No steps data found for {date}"
             
-            return steps_data
+            return json.dumps(steps_data)
         except Exception as e:
             return f"Error retrieving steps data: {str(e)}"
 
@@ -116,7 +117,7 @@ def register_tools(app):
             if not steps_data:
                 return f"No daily steps data found between {start_date} and {end_date}"
             
-            return steps_data
+            return json.dumps(steps_data)
         except Exception as e:
             return f"Error retrieving daily steps data: {str(e)}"
 
@@ -132,7 +133,7 @@ def register_tools(app):
             if not readiness:
                 return f"No training readiness data found for {date}"
             
-            return readiness
+            return json.dumps(readiness)
         except Exception as e:
             return f"Error retrieving training readiness data: {str(e)}"
 
@@ -149,7 +150,7 @@ def register_tools(app):
             if not battery_data:
                 return f"No body battery data found between {start_date} and {end_date}"
             
-            return battery_data
+            return json.dumps(battery_data)
         except Exception as e:
             return f"Error retrieving body battery data: {str(e)}"
 
@@ -165,7 +166,7 @@ def register_tools(app):
             if not events:
                 return f"No body battery events found for {date}"
             
-            return events
+            return json.dumps(events)
         except Exception as e:
             return f"Error retrieving body battery events: {str(e)}"
 
@@ -182,7 +183,7 @@ def register_tools(app):
             if not bp_data:
                 return f"No blood pressure data found between {start_date} and {end_date}"
             
-            return bp_data
+            return json.dumps(bp_data)
         except Exception as e:
             return f"Error retrieving blood pressure data: {str(e)}"
 
@@ -198,7 +199,7 @@ def register_tools(app):
             if not floors_data:
                 return f"No floors data found for {date}"
             
-            return floors_data
+            return json.dumps(floors_data)
         except Exception as e:
             return f"Error retrieving floors data: {str(e)}"
 
@@ -214,7 +215,7 @@ def register_tools(app):
             if not status:
                 return f"No training status data found for {date}"
             
-            return status
+            return json.dumps(status)
         except Exception as e:
             return f"Error retrieving training status data: {str(e)}"
 
@@ -230,7 +231,7 @@ def register_tools(app):
             if not rhr_data:
                 return f"No resting heart rate data found for {date}"
             
-            return rhr_data
+            return json.dumps(rhr_data)
         except Exception as e:
             return f"Error retrieving resting heart rate data: {str(e)}"
 
@@ -246,7 +247,7 @@ def register_tools(app):
             if not hr_data:
                 return f"No heart rate data found for {date}"
             
-            return hr_data
+            return json.dumps(hr_data)
         except Exception as e:
             return f"Error retrieving heart rate data: {str(e)}"
 
@@ -262,7 +263,7 @@ def register_tools(app):
             if not hydration_data:
                 return f"No hydration data found for {date}"
             
-            return hydration_data
+            return json.dumps(hydration_data)
         except Exception as e:
             return f"Error retrieving hydration data: {str(e)}"
 
@@ -278,7 +279,7 @@ def register_tools(app):
             if not sleep_data:
                 return f"No sleep data found for {date}"
             
-            return sleep_data
+            return json.dumps(sleep_data)
         except Exception as e:
             return f"Error retrieving sleep data: {str(e)}"
 
@@ -294,7 +295,7 @@ def register_tools(app):
             if not stress_data:
                 return f"No stress data found for {date}"
             
-            return stress_data
+            return json.dumps(stress_data)
         except Exception as e:
             return f"Error retrieving stress data: {str(e)}"
 
@@ -310,7 +311,7 @@ def register_tools(app):
             if not respiration_data:
                 return f"No respiration data found for {date}"
             
-            return respiration_data
+            return json.dumps(respiration_data)
         except Exception as e:
             return f"Error retrieving respiration data: {str(e)}"
 
@@ -326,7 +327,7 @@ def register_tools(app):
             if not spo2_data:
                 return f"No SpO2 data found for {date}"
             
-            return spo2_data
+            return json.dumps(spo2_data)
         except Exception as e:
             return f"Error retrieving SpO2 data: {str(e)}"
 
@@ -342,7 +343,7 @@ def register_tools(app):
             if not stress_data:
                 return f"No all-day stress data found for {date}"
             
-            return stress_data
+            return json.dumps(stress_data)
         except Exception as e:
             return f"Error retrieving all-day stress data: {str(e)}"
 
@@ -358,7 +359,7 @@ def register_tools(app):
             if not events:
                 return f"No daily wellness events found for {date}"
             
-            return events
+            return json.dumps(events)
         except Exception as e:
             return f"Error retrieving daily wellness events: {str(e)}"
 
