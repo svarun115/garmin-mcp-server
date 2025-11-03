@@ -21,17 +21,54 @@ uv sync
 
 ## Running the Server
 
-### With Claude Desktop
+The Garmin MCP server now supports three deployment modes:
 
-1. Create a configuration in Claude Desktop:
+### Mode 1: WebSocket (Default, Recommended)
 
-Edit your Claude Desktop configuration file:
+```bash
+# Terminal 1: Start WebSocket backend
+PORT=5001 uv run garmin-mcp
 
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+# Terminal 2 (Optional): Start HTTP adapter for testing
+PORT=5000 WS_BACKEND_URL=ws://localhost:5001 python -m garmin_mcp.http_adapter
+```
 
-Add this server configuration:
+**Features:**
+- Fast, bidirectional communication
+- HTTP endpoints for testing with curl
+- Supports remote access with HTTP adapter
+- JSON-RPC 2.0 protocol
 
+**Claude Desktop Configuration (WebSocket):**
+```json
+{
+  "mcpServers": {
+    "garmin": {
+      "command": "uvx",
+      "args": ["--python", "3.12", "--from", "git+https://github.com/Taxuspt/garmin_mcp", "garmin-mcp"],
+      "env": {
+        "GARMIN_EMAIL": "YOUR_GARMIN_EMAIL",
+        "GARMIN_PASSWORD": "YOUR_GARMIN_PASSWORD",
+        "PORT": "5001"
+      }
+    }
+  }
+}
+```
+
+### Mode 2: Stdio (Original, Direct Integration)
+
+```bash
+uv run garmin-mcp --stdio
+```
+
+**Features:**
+- Direct client integration
+- No additional processes needed
+- Original behavior preserved
+- Fully backward compatible
+
+**Claude Desktop Configuration (Stdio):**
 ```json
 {
   "mcpServers": {
@@ -42,7 +79,8 @@ Add this server configuration:
         "3.12",
         "--from",
         "git+https://github.com/Taxuspt/garmin_mcp",
-        "garmin-mcp"
+        "garmin-mcp",
+        "--stdio"
       ],
       "env": {
         "GARMIN_EMAIL": "YOUR_GARMIN_EMAIL",
@@ -53,17 +91,63 @@ Add this server configuration:
 }
 ```
 
-Replace the path with the absolute path to your server file.
-
-2. Restart Claude Desktop
-
-### With MCP Inspector
-
-For testing, you can use the MCP Inspector from the project root:
+### Mode 3: HTTP Adapter (For Testing & Remote Access)
 
 ```bash
-npx @modelcontextprotocol/inspector uv run garmin-mcp
+# Terminal 1: Start WebSocket backend
+PORT=5001 uv run garmin-mcp
+
+# Terminal 2: Start HTTP adapter (requires backend running)
+PORT=5000 WS_BACKEND_URL=ws://localhost:5001 python -m garmin_mcp.http_adapter
 ```
+
+**Features:**
+- HTTP endpoints for easy testing
+- Tool caching
+- Can run on separate machine from backend
+- Perfect for development and debugging
+
+**Test with curl:**
+```bash
+# Health check
+curl http://localhost:5001/health
+
+# List tools
+curl http://localhost:5000/listTools
+
+# Call a tool
+curl -X POST http://localhost:5000/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
+
+## Mode Comparison
+
+| Feature | WebSocket | Stdio | HTTP Adapter |
+|---------|-----------|-------|--------------|
+| Protocol | JSON-RPC 2.0 | MCP Stdio | HTTP/JSON-RPC |
+| Port | 5001 (default) | N/A | 5000 (default) |
+| Performance | Fast | Good | Moderate |
+| Remote Access | Yes (with proxy) | No | Yes |
+| Claude Desktop | ✓ | ✓ (--stdio) | ✓ (proxied) |
+| Testing | curl | stdio | curl |
+
+## Configuration
+
+### Environment Variables
+
+```bash
+GARMIN_EMAIL="your_email"              # Required
+GARMIN_PASSWORD="your_password"        # Required
+PORT="5001"                            # Optional (default: 5001 for WebSocket, 5000 for adapter)
+WS_BACKEND_URL="ws://localhost:5001"  # Optional (adapter only)
+```
+
+### With Claude Desktop
+
+Edit your configuration file and set the `PORT` environment variable:
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ## Usage Examples
 
@@ -78,13 +162,43 @@ Once connected in Claude, you can ask questions like:
 
 ## Troubleshooting
 
-If you encounter login issues:
+### Port Already in Use
 
-1. Verify your credentials are correct
-2. Check if Garmin Connect requires additional verification
-3. Ensure the garminconnect package is up to date
+If port is already in use, kill the existing process or use a different port:
 
-For other issues, check the Claude Desktop logs at:
+```bash
+# Use a different port
+PORT=5002 uv run garmin-mcp
+```
 
-- macOS: `~/Library/Logs/Claude/mcp-server-garmin.log`
-- Windows: `%APPDATA%\Claude\logs\mcp-server-garmin.log`
+### WebSocket Connection Issues
+
+- Ensure firewall allows WebSocket connections
+- Check backend is running: `curl http://localhost:5001/health`
+- Verify `WS_BACKEND_URL` environment variable is set correctly
+
+### Claude Desktop Not Finding Server
+
+1. Verify credentials (GARMIN_EMAIL, GARMIN_PASSWORD)
+2. Check the correct mode is specified (with or without --stdio)
+3. Restart Claude Desktop completely
+4. Check Claude Desktop logs:
+   - macOS: `~/Library/Logs/Claude/mcp-server-garmin.log`
+   - Windows: `%APPDATA%\Claude\logs\mcp-server-garmin.log`
+
+### Login Issues
+
+1. Verify your Garmin Connect credentials
+2. Check if Garmin requires additional verification
+3. Clear token cache: `rm -rf ~/.garminconnect ~/.garminconnect_base64`
+4. Try logging in again
+
+### HTTP Adapter Not Connecting to Backend
+
+```bash
+# Verify backend is running
+curl http://localhost:5001/health
+
+# Check adapter status
+curl http://localhost:5000/status
+```

@@ -10,6 +10,27 @@ from mcp.server.fastmcp import FastMCP
 from garth.exc import GarthHTTPError
 from garminconnect import Garmin, GarminConnectAuthenticationError
 
+# Whitelisted tools to expose via MCP (others remain internal)
+WHITELISTED_TOOLS = {
+    # Activity Management
+    "get_activities_by_date",
+    "get_activities_fordate",
+    "get_activity",
+    "get_activity_hr_in_timezones",
+    "get_activity_splits",
+    "get_activity_weather",
+    # Health & Wellness
+    "get_all_day_events",
+    "get_all_day_stress",
+    "get_body_battery",
+    "get_daily_steps",
+    "get_heart_rates",
+    "get_sleep_data",
+    # Workouts
+    "get_workout_by_id",
+    "get_workouts",
+}
+
 # Import all modules
 from garmin_mcp import activity_management
 from garmin_mcp import health_wellness
@@ -27,6 +48,37 @@ def get_mfa() -> str:
     """Get MFA code from user input"""
     print("\nGarmin Connect MFA required. Please check your email/phone for the code.")
     return input("Enter MFA code: ")
+
+
+async def get_whitelisted_tools(app):
+    """Extract only whitelisted tools from the app for public exposure.
+    
+    All tool implementations remain in the app; this function returns
+    only the whitelisted subset for listing in tools/list responses.
+    
+    Args:
+        app: FastMCP app instance containing all tools
+        
+    Returns:
+        List of tool definitions for exposed tools only
+    """
+    # Get all tools from the app (async)
+    all_tools = await app.list_tools()
+    
+    # Convert Tool objects to dicts and filter to only whitelisted tools
+    whitelisted = [
+        {
+            "name": tool.name,
+            "description": tool.description or "",
+            "inputSchema": tool.inputSchema,
+        }
+        for tool in all_tools
+        if tool.name.lower() in {t.lower() for t in WHITELISTED_TOOLS}
+    ]
+    
+    return whitelisted
+
+
 
 # Get credentials from environment
 email = os.environ.get("GARMIN_EMAIL")
@@ -91,14 +143,13 @@ def init_api(email, password):
     return garmin
 
 
-def main():
-    """Initialize the MCP server and register all tools"""
-
+def create_app():
+    """Create and configure the FastMCP app"""
     # Initialize Garmin client
     garmin_client = init_api(email, password)
     if not garmin_client:
         print("Failed to initialize Garmin Connect client. Exiting.")
-        return
+        return None
 
     print("Garmin Connect client initialized successfully.")
 
@@ -155,8 +206,32 @@ def main():
         except Exception as e:
             return f"Error retrieving activities: {str(e)}"
 
-    # Run the MCP server
-    app.run()
+    return app
+
+
+def main():
+    """Initialize the MCP server and run in selected mode"""
+    import sys
+
+    # Check if running in stdio mode
+    use_stdio = "--stdio" in sys.argv
+
+    # Create the app
+    app = create_app()
+    if not app:
+        return
+
+    if use_stdio:
+        # Run in stdio mode (original behavior)
+        print("[DEBUG] Starting in Stdio mode...", file=sys.stderr)
+        app.run()
+    else:
+        # Run in WebSocket mode (default)
+        from garmin_mcp.ws_server import run_websocket_mode
+
+        port = int(os.getenv("PORT", "5001"))
+        print(f"[DEBUG] Starting in WebSocket mode on port {port}...", file=sys.stderr)
+        run_websocket_mode(app, port)
 
 
 if __name__ == "__main__":
