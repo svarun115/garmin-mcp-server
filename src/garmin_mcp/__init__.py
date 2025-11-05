@@ -212,26 +212,36 @@ def create_app():
 def main():
     """Initialize the MCP server and run in selected mode"""
     import sys
+    import argparse
 
-    # Check if running in stdio mode
-    use_stdio = "--stdio" in sys.argv
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Garmin MCP Server")
+    parser.add_argument('--stdio', action='store_true', help='Run in stdio mode (for Claude Desktop, VS Code)')
+    parser.add_argument('--http', action='store_true', help='Run in HTTP mode (Streamable HTTP transport)')
+    parser.add_argument('--port', type=int, default=5000, help='Port for HTTP mode (default: 5000)')
+    parser.add_argument('--host', type=str, default='127.0.0.1', help='Host for HTTP mode (default: 127.0.0.1)')
+    
+    args = parser.parse_args()
 
     # Create the app
     app = create_app()
     if not app:
         return
 
-    if use_stdio:
-        # Run in stdio mode (original behavior)
+    if args.stdio:
+        # Run in stdio mode
         print("[DEBUG] Starting in Stdio mode...", file=sys.stderr)
         app.run()
+    elif args.http:
+        # Run in HTTP mode (Streamable HTTP per MCP spec)
+        from garmin_mcp.transport.http import run_http_server
+        
+        print(f"[DEBUG] Starting in HTTP mode (Streamable HTTP) on {args.host}:{args.port}/mcp...", file=sys.stderr)
+        run_http_server(app, host=args.host, port=args.port)
     else:
-        # Run in WebSocket mode (default)
-        from garmin_mcp.ws_server import run_websocket_mode
-
-        port = int(os.getenv("PORT", "5001"))
-        print(f"[DEBUG] Starting in WebSocket mode on port {port}...", file=sys.stderr)
-        run_websocket_mode(app, port)
+        # Default: stdio mode for backward compatibility
+        print("[DEBUG] Starting in Stdio mode (default)...", file=sys.stderr)
+        app.run()
 
 
 if __name__ == "__main__":
