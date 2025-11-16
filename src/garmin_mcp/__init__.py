@@ -14,18 +14,12 @@ from garminconnect import Garmin, GarminConnectAuthenticationError
 WHITELISTED_TOOLS = {
     # Activity Management
     "get_activities_by_date",
-    "get_activities_fordate",
     "get_activity",
     "get_activity_hr_in_timezones",
     "get_activity_splits",
     "get_activity_weather",
-    # Health & Wellness
-    "get_all_day_events",
-    "get_all_day_stress",
-    "get_body_battery",
-    "get_daily_steps",
-    "get_heart_rates",
-    "get_sleep_data",
+    # Health & Wellness - Comprehensive daily summary
+    "get_user_summary",  # Includes: steps, calories, heart rate, sleep, body battery, stress, wellness events
     # Workouts
     "get_workout_by_id",
     "get_workouts",
