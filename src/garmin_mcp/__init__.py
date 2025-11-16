@@ -200,6 +200,21 @@ def create_app():
         except Exception as e:
             return f"Error retrieving activities: {str(e)}"
 
+    # Override list_tools to filter by whitelist
+    original_list_tools = app.list_tools
+    
+    async def filtered_list_tools():
+        """Return only whitelisted tools"""
+        all_tools = await original_list_tools()
+        whitelisted_tool_names = {name.lower() for name in WHITELISTED_TOOLS}
+        filtered = [
+            tool for tool in all_tools 
+            if tool.name.lower() in whitelisted_tool_names
+        ]
+        return filtered
+    
+    app.list_tools = filtered_list_tools
+
     return app
 
 
