@@ -18,6 +18,6 @@ USER garminuser
 EXPOSE 5555
 
 HEALTHCHECK --interval=60s --timeout=15s --start-period=30s --retries=3 \
-    CMD curl -sf http://localhost:5555/health || exit 1
+    CMD curl -sf http://localhost:5555/healthz || exit 1
 
-CMD ["python", "-m", "garmin_mcp", "--http", "--port", "5555"]
+CMD ["python", "-m", "garmin_mcp", "--http", "--host", "0.0.0.0", "--port", "5555"]
