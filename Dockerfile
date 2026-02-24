@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install package (pyproject.toml based, uses hatchling build backend)
-COPY pyproject.toml .
+COPY pyproject.toml README.md ./
 COPY src/ ./src/
 RUN pip install --upgrade pip hatchling && pip install --no-cache-dir .
 
