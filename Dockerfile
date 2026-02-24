@@ -5,10 +5,10 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install package (pyproject.toml based)
+# Install package (pyproject.toml based, uses hatchling build backend)
 COPY pyproject.toml .
 COPY src/ ./src/
-RUN pip install --no-cache-dir -e .
+RUN pip install --upgrade pip hatchling && pip install --no-cache-dir -e .
 
 # Non-root user
 # .garth/ session tokens are stored in the garmin-tokens named volume mounted at /app/.garth
