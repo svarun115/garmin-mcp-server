@@ -20,6 +20,16 @@ WHITELISTED_TOOLS = {
     "get_activity_weather",
     # Health & Wellness - Comprehensive daily summary
     "get_user_summary",  # Includes: steps, calories, heart rate, sleep, body battery, stress, wellness events
+    # Health & Wellness - Detail (additive, not covered by user_summary)
+    "get_sleep_data",           # Full sleep stage breakdown + sleep score
+    "get_body_battery_events",  # What caused Body Battery changes (drain/recharge)
+    # Training & Performance (Forerunner 165 supported)
+    "get_hrv_data",             # Nightly HRV readings + 90-day baseline + status
+    "get_max_metrics",          # VO2 max + fitness age
+    "get_race_predictions",     # Predicted 5K/10K/HM/marathon times
+    "get_training_effect",      # Aerobic/anaerobic training effect per activity
+    # Goals & Records
+    "get_personal_record",      # Personal records across activity types
     # Workouts
     "get_workout_by_id",
     "get_workouts",
