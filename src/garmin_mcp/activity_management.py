@@ -168,7 +168,7 @@ def register_tools(app):
     @app.tool()
     async def get_activity_exercise_sets(activity_id: int) -> str:
         """Get exercise sets for strength training activities
-        
+
         Args:
             activity_id: ID of the activity to retrieve exercise sets for
         """
@@ -176,9 +176,48 @@ def register_tools(app):
             exercise_sets = garmin_client.get_activity_exercise_sets(activity_id)
             if not exercise_sets:
                 return f"No exercise sets found for activity with ID {activity_id}"
-            
+
             return json.dumps(exercise_sets)
         except Exception as e:
             return f"Error retrieving activity exercise sets: {str(e)}"
 
+    @app.tool()
+    async def update_activity_exercise_sets(activity_id: int, payload: Dict[str, Any]) -> str:
+        """Update exercise sets on a strength training activity (correct auto-detected
+        exercises, fix reps/weight, change set type).
+
+        Treats Garmin as the source of truth for strength workout detail. Typical flow:
+        fetch the current payload via get_activity_exercise_sets, edit it, submit it here.
+
+        Args:
+            activity_id: ID of the activity to update.
+            payload: Full exerciseSets JSON (same shape returned by
+                get_activity_exercise_sets). Must include the top-level "exerciseSets"
+                array with each set's category, exerciseName, reps, weight, etc.
+        """
+        try:
+            url = f"/activity-service/activity/{activity_id}/exerciseSets"
+            resp = garmin_client.garth.put(
+                "connectapi", url, json=payload, api=True
+            )
+            result = {
+                "status_code": getattr(resp, "status_code", None),
+                "body": _safe_json(resp),
+                "activity_id": activity_id,
+            }
+            return json.dumps(result)
+        except Exception as e:
+            return f"Error updating activity exercise sets: {str(e)}"
+
     return app
+
+
+def _safe_json(resp):
+    """Best-effort JSON decode; fall back to text. Used by write tools."""
+    try:
+        return resp.json()
+    except Exception:
+        try:
+            return resp.text
+        except Exception:
+            return None
