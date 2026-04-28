@@ -15,10 +15,12 @@ WHITELISTED_TOOLS = {
     # Activity Management
     "get_activities_by_date",
     "get_activity",
+    "get_activities_bulk",
     "get_activity_hr_in_timezones",
     "get_activity_splits",
     "get_activity_weather",
     "get_activity_exercise_sets",
+    "get_activity_gps_track",
     "update_activity_exercise_sets",
     # Health & Wellness - Comprehensive daily summary
     "get_user_summary",  # Includes: steps, calories, heart rate, sleep, body battery, stress, wellness events
