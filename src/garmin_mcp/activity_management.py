@@ -317,8 +317,8 @@ def register_tools(app):
         """
         try:
             url = f"/activity-service/activity/{activity_id}/exerciseSets"
-            resp = garmin_client.garth.put(
-                "connectapi", url, json=payload, api=True
+            resp = garmin_client.client.put(
+                "connectapi", url, json=payload, api=False
             )
             result = {
                 "status_code": getattr(resp, "status_code", None),

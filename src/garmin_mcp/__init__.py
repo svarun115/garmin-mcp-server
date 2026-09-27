@@ -7,8 +7,12 @@ import os
 import requests
 from mcp.server.fastmcp import FastMCP
 
-from garth.exc import GarthHTTPError
-from garminconnect import Garmin, GarminConnectAuthenticationError
+from garminconnect import (
+    Garmin,
+    GarminConnectAuthenticationError,
+    GarminConnectConnectionError,
+    GarminConnectTooManyRequestsError,
+)
 
 # Whitelisted tools to expose via MCP (others remain internal)
 WHITELISTED_TOOLS = {
@@ -96,58 +100,35 @@ tokenstore_base64 = os.getenv("GARMINTOKENS_BASE64") or "~/.garminconnect_base64
 
 
 def init_api(email, password):
-    """Initialize Garmin API with your credentials."""
+    """Initialize the Garmin client from the saved token store.
 
+    garminconnect >= 0.3 keeps a single `garmin_tokens.json` (DI OAuth2) in
+    the token store, refreshes the access token itself and re-saves the file,
+    so a server started from valid tokens stays authenticated on its own.
+
+    Deliberately no password login here: this runs unattended as a service,
+    a first login may need an MFA code, and Garmin rate-limits cloud IPs. Tokens
+    are minted by an interactive login elsewhere (see README) and copied in.
+    If they are missing or rejected, fail loudly rather than start a server
+    that answers every call with an auth error.
+    """
+    print(f"Logging in to Garmin Connect from token store '{tokenstore}'...")
     try:
-        # Using Oauth1 and OAuth2 token files from directory
-        print(
-            f"Trying to login to Garmin Connect using token data from directory '{tokenstore}'...\n"
-        )
-
-        # Using Oauth1 and Oauth2 tokens from base64 encoded string
-        # print(
-        #     f"Trying to login to Garmin Connect using token data from file '{tokenstore_base64}'...\n"
-        # )
-        # dir_path = os.path.expanduser(tokenstore_base64)
-        # with open(dir_path, "r") as token_file:
-        #     tokenstore = token_file.read()
-
         garmin = Garmin()
         garmin.login(tokenstore)
-
-    except (FileNotFoundError, GarthHTTPError, GarminConnectAuthenticationError):
-        # Session is expired. You'll need to log in again
+    except (
+        FileNotFoundError,
+        GarminConnectAuthenticationError,
+        GarminConnectConnectionError,
+        GarminConnectTooManyRequestsError,
+        requests.exceptions.HTTPError,
+    ) as err:
         print(
-            "Login tokens not present, login with your Garmin Connect credentials to generate them.\n"
-            f"They will be stored in '{tokenstore}' for future use.\n"
+            f"Garmin login from token store failed: {type(err).__name__}: {err}\n"
+            "Mint fresh tokens with an interactive login and copy garmin_tokens.json "
+            f"into '{tokenstore}'."
         )
-        try:
-            garmin = Garmin(
-                email=email, password=password, is_cn=False, prompt_mfa=get_mfa
-            )
-            garmin.login()
-            # Save Oauth1 and Oauth2 token files to directory for next login
-            garmin.garth.dump(tokenstore)
-            print(
-                f"Oauth tokens stored in '{tokenstore}' directory for future use. (first method)\n"
-            )
-            # Encode Oauth1 and Oauth2 tokens to base64 string and safe to file for next login (alternative way)
-            token_base64 = garmin.garth.dumps()
-            dir_path = os.path.expanduser(tokenstore_base64)
-            with open(dir_path, "w") as token_file:
-                token_file.write(token_base64)
-            print(
-                f"Oauth tokens encoded as base64 string and saved to '{dir_path}' file for future use. (second method)\n"
-            )
-        except (
-            FileNotFoundError,
-            GarthHTTPError,
-            GarminConnectAuthenticationError,
-            requests.exceptions.HTTPError,
-        ) as err:
-            print(err)
-            return None
-
+        return None
     return garmin
 
 
